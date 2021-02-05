@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 @Entity
@@ -34,6 +35,7 @@ public class Pedido {
 	private Cliente cliente;
 	
 	@OneToMany(mappedBy="pedido", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@OrderBy("id")
 	private Set<PedidoItem> itens;
 	
 //	private Collection<PedidoItem> pedidoItem;

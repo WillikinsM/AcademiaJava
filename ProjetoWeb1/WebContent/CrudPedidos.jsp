@@ -1,3 +1,4 @@
+<%@page import="java.util.Date"%>
 <%@page import="java.util.Arrays"%>
 <%@page import="org.hibernate.internal.build.AllowSysOut"%>
 <%@page import="java.util.Collections"%>
@@ -36,9 +37,11 @@ tr.rows:hover {
 <jsp:include page="Menu.jsp"></jsp:include>
 <jsp:useBean id="cd" class="control.PedidoDAO"></jsp:useBean>
 <jsp:useBean id="cp" class="control.ProdutoDAO"></jsp:useBean>
+<jsp:useBean id="fc" class="control.ClienteDAO"></jsp:useBean>
 
 <% 
 //PedidoDAO cd =  new PedidoDAO();
+
 boolean mostraProduto=false;
 
 String auxPesquisaPedido=request.getParameter("pesquisaPedido");
@@ -46,11 +49,27 @@ String auxPedidoSelecionado=request.getParameter("pedidoSelecionado");
 if (auxPesquisaPedido == null) auxPesquisaPedido="";
 if (auxPedidoSelecionado == null) auxPedidoSelecionado="";
 
+String auxGravar=request.getParameter("gravar");
+String auxCancelar=request.getParameter("cancelar");
+String auxApagar=request.getParameter("apagar");
+String auxIncluir=request.getParameter("btIncluir");
+String auxCliente=request.getParameter("cliente"); 
+
 Pedido pedidoAtual =  new Pedido();
+if (auxIncluir !=null) { 
+	Cliente clienteAtual=null;
+	if ((auxCliente!=null)&&(auxCliente !="")) clienteAtual=fc.getById(Integer.parseInt(auxCliente));
+	if (clienteAtual==null) clienteAtual=new Cliente();
+	
+	pedidoAtual.setCliente(clienteAtual);
+	pedidoAtual.setDtVenda(new Date());
+	cd.gravar(pedidoAtual);
+}
 
 if (auxPedidoSelecionado != "") {
 	pedidoAtual = cd.getById(Integer.parseInt(auxPedidoSelecionado));
 }
+if (pedidoAtual == null) pedidoAtual =  new Pedido();
 
 String auxAddProdutoId=request.getParameter("addProdutoId");
 String auxAddProdutoValor=request.getParameter("addProdutoValor");
@@ -100,10 +119,6 @@ String auxEstoque=request.getParameter("estoque");
 String auxValor=request.getParameter("valor");
 String auxFornecedorId=request.getParameter("fornecedor");
 
-String auxGravar=request.getParameter("gravar");
-String auxCancelar=request.getParameter("cancelar");
-String auxApagar=request.getParameter("apagar");
-
 String auxAnteriorPedido=request.getParameter("anteriorPedido");
 String auxProximoPedido=request.getParameter("proximoPedido");
 
@@ -138,6 +153,8 @@ if (auxAnteriorProduto !=null) mostraProduto=true;
 if (auxProximoProduto !=null) mostraProduto=true; 
 
 String auxMethod=request.getMethod();
+
+SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 
 if (auxGravar!=null) {
 	if (auxId==null) auxId="0";
@@ -210,13 +227,14 @@ if (auxGravar!=null) {
 			  </tr>
 	
 				<%
-				
-				ArrayList<Pedido> cli = cd.pesquisar(auxPesquisaPedido);
-				
-				SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-				
-				for (Pedido pedido : cli) {		
-					out.println("<tr class='rows'>");
+				ArrayList<Pedido> pedidos = cd.pesquisar(auxPesquisaPedido);
+								
+				for (Pedido pedido : pedidos) {		
+					out.print("<tr class='rows");
+					if ((pedidoAtual != null)&&(pedidoAtual.getId()==pedido.getId())) {
+						out.print(" active");
+					}
+					out.println("'>");
 					out.println("<td>"+pedido.getId().toString()+"</td>");
 					out.println("<td>"+df.format(pedido.getDtVenda())+"</td>");
 					out.print("<td cid="+'"');
@@ -289,7 +307,7 @@ if (auxGravar!=null) {
 		  </tr>
 		</table>
 		
-		<form method="post" 
+		<form style="display:none" method="post" 
 			id="formAddProdutos" name="formAddProdutos">
 			<input id="addProdutoId" name="addProdutoId">
 			<input id="addProdutoValor" name="addProdutoValor">
@@ -315,14 +333,16 @@ if (auxGravar!=null) {
     
     </div>
     <div class="col-sm">
-	    <nav class="navbar navbar-light bg-light justify-content-between">
-		  <button type="button" 
-		  		  class="btn btn-primary"
-		  		  id="btIncluir"
-		  		  onclick="limpar()"><i class="fas fa-user-plus"></i>&nbsp;Incluir Pedido</button>
-		</nav>
 		<form method="post" 
 			id="formPedido" name="formPedido">
+		    <nav class="navbar navbar-light bg-light justify-content-between">
+			  <button type="submit" 
+			  		  class="btn btn-primary"
+			  		  id="btIncluir"
+			  		  name="btIncluir"><i class="fas fa-user-plus"></i>&nbsp;Incluir Pedido</button>
+			  <button id="novoApagar" class="btn btn-danger btn-right"><i class="fas fa-trash-alt"></i>&nbsp;Apagar</button>
+			  <button id="apagar" name="apagar" type="submit" style="display:none" ></button>
+			</nav>
 		  <div class="row">
 			  <div class="form-group col-sm-4">
 			    <label for="codigoInput">Pedido</label>
@@ -338,9 +358,9 @@ if (auxGravar!=null) {
 			    <input type="text" class="form-control" 
 			    		id="dataInput"
 			    		name="data"
-			    		value="<% out.print(pedidoAtual.getDtVenda()); %>" 
+			    		value="<% out.print(df.format(pedidoAtual.getDtVenda())); %>" 
 			           placeholder="Data do Pedido">
-			  </div>
+			  </div>			    
 		  </div>
 		  <div class="form-group">
 		    <label for="clienteInput">Cliente</label>
@@ -348,7 +368,6 @@ if (auxGravar!=null) {
 				name="cliente" 
 				class="form-control">
 				<%				
-				ClienteDAO fc= new ClienteDAO();
 		    	fc.setPageSize(200);
 		    	fc.setPageNumber(1);	
 				ArrayList<Cliente> cliList = fc.pesquisar("");
@@ -412,13 +431,7 @@ if (auxGravar!=null) {
 				            placeholder="Total do pedido">
 				</div>
 			</div>
- 		  </div>
-			<nav class="navbar navbar-light bg-light">
-			  <button name="gravar" type="submit" class="btn btn-success"><i class="fas fa-save"></i>&nbsp;Gravar</button>
-			  <button name="cancelar" type="submit" class="btn btn-secondary"><i class="fas fa-window-close"></i>&nbsp;Cancelar</button>
-			  <button id="novoApagar" class="btn btn-danger btn-right"><i class="fas fa-trash-alt"></i>&nbsp;Apagar</button>
-			  <button id="apagar" name="apagar" type="submit" style="display:none" ></button>
-			</nav> 		  
+ 		  </div>	  
 		</form>
     </div>
   </div>
@@ -501,13 +514,7 @@ $("#listaProdutos-tab").on("click", function(){
 //	$("#nomeInput").val("");
 //	$("#estoqueInput").val("");
 //});
-function limpar(){
-	$("tr.rows").removeClass("active");
-	$("#codigoInput").val("");
-	$("#nomeInput").val("");
-	$("#estoqueInput").val("");
-	$("#valorInput").val("");
-}
+
 $("#novoApagar").click(function(evento){
 	evento.preventDefault();
 	confirmaApagar();

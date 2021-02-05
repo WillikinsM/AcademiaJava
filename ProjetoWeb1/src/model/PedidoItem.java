@@ -13,7 +13,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name ="pedidos_itens")
-public class PedidoItem {
+public class PedidoItem implements Comparable<PedidoItem> {
 	
 	@Id
 	@Column(name="id")
@@ -88,6 +88,12 @@ public class PedidoItem {
 		this.pedido = pedido;
 	}
 	
+	@Override
+	public int compareTo(PedidoItem o) {
+		//this.getId().compareTo(o.getId());
+		this.getProduto().getNome().compareTo(o.getProduto().getNome());
+		return 0;
+	}
 	
 
 }
