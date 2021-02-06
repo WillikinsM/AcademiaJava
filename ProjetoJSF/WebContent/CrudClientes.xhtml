@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h1>Cadastro de Clientes</h1>
+<div class="card">
+	<h:form id="formPesqClientes">
+		<span class="ui-input-icon-left"> <i class="pi pi-search" /> <p:inputText
+				placeholder="Pesquisar Cliente" value="#{clienteDAO.pesq}"
+				onchange="executaListar()" /> <p:remoteCommand
+				name="executaListar" update="formListaClientes"></p:remoteCommand>
+		</span>
+		<p:button value = "Novo Cliente">
+		
+		</p:button>
+		
+		<p:remoteCommand name="executaNovo"
+			actionListener="#{clienteDAO.novo()}" update="editaClientes"></p:remoteCommand>
+	</h:form>
+	<h:form id="formListaClientes">
+		<p:dataTable id="listaClientes" 
+			var="cliente"
+			value="#{clienteDAO.lClientes}" 
+			selectionMode="single"
+			rowKey="#{cliente.id}" 
+			selection="#{clienteDAO.clienteAtual}"
+			paginator="true"
+			rows ="#{clienteDAO.pageSize}"
+			rowsPerPageTemplate="5,10,{ShowAll|'All'}">
+			
+			<p:ajax event="rowSelect" update="editaClientes" />
+			<p:column headerText="Nome">
+				<h:outputText value="#{cliente.nome}"></h:outputText>
+			</p:column>
+			<p:column headerText="Telefone">
+				<h:outputText value="#{cliente.telefone}"></h:outputText>
+			</p:column>
+		</p:dataTable>
+	</h:form>
+</div>
+<h:form id="editaClientes">
+	<p:panel id="detalhes">
+		<h5>Nome</h5>
+		<p:inputText value="#{clienteDAO.clienteAtual.nome}" />
+		<h5>Telefone</h5>
+		<p:inputText value="#{clienteDAO.clienteAtual.telefone}" />
+
+		<p:button value="Gravar" onclick="executaGravar()"></p:button>
+
+		<p:button value="Exclir" onclick="executaApagar()"></p:button>
+
+		<p:remoteCommand name="executaGravar"
+			actionListener="#{clienteDAO.grava()}" update="formListaClientes"></p:remoteCommand>
+
+		<p:remoteCommand name="executaApagar"
+			actionListener="#{clienteDAO.apaga()}" update="formListaClientes"></p:remoteCommand>
+
+	</p:panel>
+</h:form>
+
+</html>
